@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Viewer with Session Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2575fc, #6a11cb);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section, .preview-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        h2 {
+            color: #2575fc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .input-methods {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .method-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .method-btn.active {
+            background: #2575fc;
+            color: white;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .file-input-container {
+            display: none;
+            margin-bottom: 20px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #e9ecef;
+            border-color: #2575fc;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .view-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to right, #2575fc, #6a11cb);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
+        }
+        
+        .preview-placeholder {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+        
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #adb5bd;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            background: #e7f1ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #2575fc;
+        }
+        
+        .instructions h3 {
+            color: #2575fc;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HTML Viewer</h1>
+            <p class="subtitle">Paste your HTML code or upload a file to preview it</p>
+        </header>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2>Input HTML</h2>
+                
+                <div class="input-methods">
+                    <button class="method-btn active" id="pasteBtn">Paste HTML</button>
+                    <button class="method-btn" id="uploadBtn">Upload File</button>
+                </div>
+                
+                <div class="input-container">
+                    <textarea id="htmlInput" placeholder="Paste your HTML code here..."></textarea>
+                    
+                    <div class="file-input-container" id="fileInputContainer">
+                        <label for="fileInput" class="file-input-label">
+                            <i>📁</i>
+                            <p>Click to upload an HTML file</p>
+                            <p class="file-name" id="fileName">No file selected</p>
+                        </label>
+                        <input type="file" id="fileInput" accept=".html,.htm" style="display: none;">
+                    </div>
+                </div>
+                
+                <button class="view-btn" id="viewBtn">View HTML</button>
+            </div>
+            
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="preview-placeholder" id="previewPlaceholder">
+                    <i>👁️</i>
+                    <p>Your HTML preview will appear here</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Paste your HTML code in the text area or upload an HTML file</li>
+                <li>Click "View HTML" to open your HTML in a new tab</li>
+                <li>A control window will also open with an "End Session" button</li>
+                <li>Use the control window to close the HTML preview when done</li>
+            </ol>
+        </div>
+    </div>
+    
+    <footer>
+        <p>HTML Viewer &copy; 2023 | All your HTML preview needs in one place</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pasteBtn = document.getElementById('pasteBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const htmlInput = document.getElementById('htmlInput');
+            const fileInputContainer = document.getElementById('fileInputContainer');
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            const viewBtn = document.getElementById('viewBtn');
+            const previewPlaceholder = document.getElementById('previewPlaceholder');
+            
+            let currentViewerTab = null;
+            let controllerWindow = null;
+            
+            // Switch between input methods
+            pasteBtn.addEventListener('click', function() {
+                pasteBtn.classList.add('active');
+                uploadBtn.classList.remove('active');
+                htmlInput.style.display = 'block';
+                fileInputContainer.style.display = 'none';
+            });
+            
+            uploadBtn.addEventListener('click', function() {
+                uploadBtn.classList.add('active');
+                pasteBtn.classList.remove('active');
+                htmlInput.style.display = 'none';
+                fileInputContainer.style.display = 'block';
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileName.textContent = file.name;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        htmlInput.value = e.target.result;
+                        updatePreview();
+                    };
+                    reader.readAsText(file);
+                } else {
+                    fileName.textContent = 'No file selected';
+                }
+            });
+            
+            // Update preview when typing
+            htmlInput.addEventListener('input', updatePreview);
+            
+            // View HTML button click
+            viewBtn.addEventListener('click', function() {
+                const htmlContent = htmlInput.value.trim();
+                
+                if (!htmlContent) {
+                    alert('Please enter some HTML code or upload a file.');
+                    return;
+                }
+                
+                // Create a blob with the HTML content
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // Open the HTML in a new tab
+                currentViewerTab = window.open(blobUrl, '_blank');
+                
+                // Create the controller window
+                createControllerWindow();
+            });
+            
+            // Update the preview area
+            function updatePreview() {
+                const htmlContent = htmlInput.value.trim();
+                
+                if (htmlContent) {
+                    // Create a blob URL for the preview
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Create an iframe for the preview
+                    previewPlaceholder.innerHTML = `<iframe src="${blobUrl}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
+                } else {
+                    previewPlaceholder.innerHTML = `
+                        <i>👁️</i>
+                        <p>Your HTML preview will appear here</p>
+                    `;
+                }
+            }
+            
+            // Create the controller window
+            function createControllerWindow() {
+                // Close existing controller if any
+                if (controllerWindow && !controllerWindow.closed) {
+                    controllerWindow.close();
+                }
+                
+                // Create controller window content
+                const controllerContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>HTML Viewer Controller</title>
+                        <style>
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                margin: 0;
+                                padding: 20px;
+                                background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+                                color: white;
+                                text-align: center;
+                                min-height: 100vh;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                align-items: center;
+                            }
+                            .controller-container {
+                                background: rgba(255, 255, 255, 0.1);
+                                backdrop-filter: blur(10px);
+                                padding: 30px;
+                                border-radius: 15px;
+                                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                                max-width: 300px;
+                            }
+                            h1 {
+                                margin-bottom: 20px;
+                                font-size: 1.5rem;
+                            }
+                            .status {
+                                margin: 20px 0;
+                                padding: 10px;
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 8px;
+                            }
+                            .end-btn {
+                                background: #ff4757;
+                                color: white;
+                                border: none;
+                                padding: 12px 25px;
+                                border-radius: 8px;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                                width: 100%;
+                            }
+                            .end-btn:hover {
+                                background: #ff3742;
+                                transform: translateY(-2px);
+                                box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="controller-container">
+                            <h1>HTML Viewer Controller</h1>
+                            <div class="status" id="status">Session Active</div>
+                            <button class="end-btn" id="endBtn">End Session</button>
+                        </div>
+                        <script>
+                            document.getElementById('endBtn').addEventListener('click', function() {
+                                // Try to close the viewer tab
+                                if (window.opener && !window.opener.closed) {
+                                    window.opener.closeViewer();
+                                }
+                                window.close();
+                            });
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                // Open the controller window
+                controllerWindow = window.open('', 'controller', 'width=400,height=300,left=100,top=100');
+                controllerWindow.document.write(controllerContent);
+                controllerWindow.document.close();
+                
+                // Make the controller window reference the opener
+                controllerWindow.opener = window;
+            }
+            
+            // Function to close the viewer (called from controller)
+            window.closeViewer = function() {
+                if (currentViewerTab && !currentViewerTab.closed) {
+                    currentViewerTab.close();
+                    currentViewerTab = null;
+                }
+            };
+            
+            // Initialize with paste method active
+            pasteBtn.click();
+        });
+    </script>
+</body>
+</html>
